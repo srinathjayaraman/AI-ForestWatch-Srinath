@@ -33,8 +33,7 @@ def fix(target_image):
 
 def get_images_from_large_file(data_directory_path, label_directory_path, destination,
                                bands, year, region, stride):
-    image_path = os.path.join(
-        data_directory_path, 'landsat8_{}_region_{}.tif'.format(year, region))
+    image_path = os.path.join(data_directory_path, 'landsat8_{}_region_{}.tif'.format(year, region))
     label_path = os.path.join(label_directory_path,'{}_{}.tif'.format(region, year))
     if not os.path.exists(destination):
         print('Log: Making parent directory: {}'.format(destination))
