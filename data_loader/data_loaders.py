@@ -51,7 +51,7 @@ class Landsat8TrainDataLoader(BaseDataLoader):
         if mode == 'train':
             self.dataset = BaseTrainDataset(data_list, data_map_path, 8, model_input_size,
                                             bands, num_classes, one_hot,
-                                            transforms=transforms)
+                                            mode='train', transforms=transforms)
             super().__init__(self.dataset, batch_size, True, num_workers)
         else:
             self.dataset = BaseTrainDataset(data_list, data_map_path, model_input_size, model_input_size,
