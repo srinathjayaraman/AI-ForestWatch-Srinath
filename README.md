@@ -107,7 +107,7 @@ We have provided our own datasets for containing this file in the provided Googl
 
 You may use our pretrained model for inference or pass another checkpoint. By default, if you run `python inference.py`, then inference will be performed for all files in `data_path` directory. If you wish to perform inference for specific districts and/or years, an example command is as follows:
 
-`python inference.py -d abbotabad battagram -y 2015 2016`  
+`python inference.py -dst abbottabad battagram -y 2015 2016`  
 
 The output of this script will be saved in the most recent experiment folder inside `./saved/inference/`
 
