@@ -6,4 +6,6 @@
 
 - In `base_dataset.py`, a temporary directory is being created, used to store 'temp_image.npy' and then deleted before the file for a region is processed. But the original research was done on a Linux system. On Windows 10, I continuously faced an error - `PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'temp_numpy_saves\\temp_image.npy`. Turns out that Windows does not like the `mmap_mode` command that was used when a `temp_image_path` is created using `os.path.join`, since it is created in read-only mode. Deleting the `mmap_mode` parameter fixed the issue.
 
+- When I tried to run `inference.py` for a specific district/year combination (battagram/2016 for example), the argument would never get passed to `inference.py`. This was because in the `if` condition that was checking to see if arguments were being passed through the command line, the district name and year were coded as `config.districts` and `config.years`. It should be `[args.districts]` and `[args.years]`.
+
 I will keep updating this document as time goes on......
