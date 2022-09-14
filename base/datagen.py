@@ -6,20 +6,17 @@
 
 import os
 import pickle
-
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from osgeo import gdal
 from PIL import Image
 
-
 def adaptive_resize(array, new_shape):
     # reshape the labels to the size of the image
     single_band = Image.fromarray(array)
     single_band_resized = single_band.resize(new_shape, Image.NEAREST)
     return np.asarray(single_band_resized)
-
 
 def fix(target_image):
     # we fix the label by
@@ -29,7 +26,6 @@ def fix(target_image):
     # 2. Subtracting 1 from all labels => Non-forest = 0, Forest = 1
     target_image -= 1
     return target_image
-
 
 def get_images_from_large_file(data_directory_path, label_directory_path, destination,
                                bands, year, region, stride):
@@ -72,10 +68,8 @@ def get_images_from_large_file(data_directory_path, label_directory_path, destin
                 print(i * stride, (i + 1) * stride, j * stride, (j + 1) * stride)
             count += 1
 
-
 def mask_landsat8_image_using_rasterized_shapefile(rasterized_shapefiles_path, district, this_landsat8_bands_list):
-    this_shapefile_path = os.path.join(
-        rasterized_shapefiles_path, "{}_shapefile.tif".format(district))
+    this_shapefile_path = os.path.join(rasterized_shapefiles_path, "{}_shapefile.tif".format(district))
     ds = gdal.Open(this_shapefile_path)
     assert ds.RasterCount == 1
     shapefile_mask = np.array(ds.GetRasterBand(1).ReadAsArray(), dtype=np.uint8)
@@ -92,7 +86,6 @@ def mask_landsat8_image_using_rasterized_shapefile(rasterized_shapefiles_path, d
     print("{}: Generated Image Size: {}".format(district, clipped_full_spectrum_resized[0].shape, len(clipped_full_spectrum_resized)))
     return clipped_full_spectrum_resized
 
-
 def check_generated_dataset(path_to_dataset):
     for count in range(266):
         this_example_save_path = os.path.join(path_to_dataset, '{}.pkl'.format(count))
@@ -105,7 +98,6 @@ def check_generated_dataset(path_to_dataset):
         plt.subplot(1, 2, 2)
         plt.imshow(label_subset)
         plt.show()
-
 
 def check_generated_fnf_datapickle(example_path):
     with open(example_path, 'rb') as this_pickle:
@@ -120,7 +112,6 @@ def check_generated_fnf_datapickle(example_path):
     plt.imshow(that)
     plt.show()
 
-
 def toTensor(image, label, one_hot=True):
     '''will convert image and label from numpy to torch tensor'''
     # swap color axis because
@@ -134,7 +125,6 @@ def toTensor(image, label, one_hot=True):
     else:
         label_tensor = torch.from_numpy(label).long()
     return img_tensor, label_tensor
-
 
 def get_indices(arr):
     bands = {
