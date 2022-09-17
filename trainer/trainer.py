@@ -15,9 +15,7 @@ class Trainer(BaseTrainer):
     """
     Trainer class
     """
-
-    def __init__(self, model, criterion, metric_ftns, optimizer, config, device,
-                 data_loader, valid_data_loader=None, test_data_loader=None,
+    def __init__(self, model, criterion, metric_ftns, optimizer, config, device, data_loader, valid_data_loader=None, test_data_loader=None, 
                  lr_scheduler=None, len_epoch=None):
         super().__init__(model, criterion, metric_ftns, optimizer, config)
         self.config = config
@@ -36,18 +34,13 @@ class Trainer(BaseTrainer):
         self.do_test = self.test_data_loader is not None
         self.lr_scheduler = lr_scheduler
         self.log_step = int(np.sqrt(data_loader.batch_size))
-
-        self.train_metrics = MetricTracker(
-            'loss', *[m.__name__ for m in self.metric_ftns])
-        self.valid_metrics = MetricTracker(
-            'loss', *[m.__name__ for m in self.metric_ftns])
-        self.test_metrics = MetricTracker(
-            'loss', *[m.__name__ for m in self.metric_ftns])
+        self.train_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns])
+        self.valid_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns])
+        self.test_metrics = MetricTracker('loss', *[m.__name__ for m in self.metric_ftns])
 
     def _train_epoch(self, epoch):
         """
         Training logic for an epoch
-
         :param epoch: Integer, current training epoch.
         :return: A log that contains average loss and metric in this epoch.
         """
@@ -56,7 +49,6 @@ class Trainer(BaseTrainer):
         for batch_idx, item in enumerate(self.data_loader):
             data, target = item['input'], item['label']
             data, target = data.to(self.device), target.to(self.device)
-
             self.optimizer.zero_grad()
             out_x, logits = self.model(data)
             pred = torch.argmax(logits, dim=1)
@@ -68,14 +60,10 @@ class Trainer(BaseTrainer):
 
             self.train_metrics.update('loss', loss.item())
             for met in self.metric_ftns:
-                self.train_metrics.update(
-                    met.__name__, met(logits, not_one_hot_target))
+                self.train_metrics.update(met.__name__, met(logits, not_one_hot_target))
 
             if batch_idx % self.log_step == 0:
-                self.logger.debug('Train Epoch: {} {} Loss: {:.6f}'.format(
-                    epoch,
-                    self._progress(batch_idx),
-                    loss.item()))
+                self.logger.debug('Train Epoch: {} {} Loss: {:.6f}'.format(epoch,self._progress(batch_idx),loss.item()))
 
             if batch_idx == self.len_epoch:
                 break
@@ -95,7 +83,6 @@ class Trainer(BaseTrainer):
     def _valid_epoch(self):
         """
         Validate after training an epoch
-
         :return: A log that contains information about validation
         """
         self.model.eval()
@@ -104,22 +91,18 @@ class Trainer(BaseTrainer):
             for batch_idx, item in enumerate(self.valid_data_loader):
                 data, target = item['input'], item['label']
                 data, target = data.to(self.device), target.to(self.device)
-
                 out_x, logits = self.model(data)
                 pred = torch.argmax(logits, dim=1)
                 not_one_hot_target = torch.argmax(target, dim=1)
                 loss = self.criterion(logits, not_one_hot_target)
-
                 self.valid_metrics.update('loss', loss.item())
                 for met in self.metric_ftns:
-                    self.valid_metrics.update(
-                        met.__name__, met(logits, not_one_hot_target))
+                    self.valid_metrics.update(met.__name__, met(logits, not_one_hot_target))
         return self.valid_metrics.result()
 
     def _test_epoch(self):
         """
         Test after training
-
         :return: A log that contains information about testing
         """
         self.model.eval()
@@ -128,16 +111,13 @@ class Trainer(BaseTrainer):
             for batch_idx, item in enumerate(self.test_data_loader):
                 data, target = item['input'], item['label']
                 data, target = data.to(self.device), target.to(self.device)
-
                 out_x, logits = self.model(data)
                 pred = torch.argmax(logits, dim=1)
                 not_one_hot_target = torch.argmax(target, dim=1)
                 loss = self.criterion(logits, not_one_hot_target)
-
                 self.test_metrics.update('loss', loss.item())
                 for met in self.metric_ftns:
-                    self.test_metrics.update(
-                        met.__name__, met(logits, not_one_hot_target))
+                    self.test_metrics.update(met.__name__, met(logits, not_one_hot_target))
         return self.test_metrics.result()
 
     def _progress(self, batch_idx):
