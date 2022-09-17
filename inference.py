@@ -33,8 +33,7 @@ def main(config, args):
         logger.info('Loading checkpoint: {} ...'.format(config.resume))
         resume_path = config.resume
     else:
-        logger.info('Loading checkpoint: {} ...'.format(
-            config['trainer']['pretrained_model']))
+        logger.info('Loading checkpoint: {} ...'.format(config['trainer']['pretrained_model']))
         resume_path = config['trainer']['pretrained_model']
     checkpoint = torch.load(resume_path)
     model.load_state_dict(checkpoint, strict=False)
@@ -102,23 +101,17 @@ def main(config, args):
             forest_map_for_visualization = np.dstack([forest_map_rband, forest_map_gband, forest_map_bband]).astype(np.uint8)
             save_this_map_path = os.path.join(config.inference_dir, '{}_{}_inferred_map.png'.format(district, year))
             matimg.imsave(save_this_map_path, forest_map_for_visualization)
-            logger.info('Saved: {} @ {}'.format(save_this_map_path,
-                        forest_map_for_visualization.shape))
+            logger.info('Saved: {} @ {}'.format(save_this_map_path,forest_map_for_visualization.shape))
 
 
 if __name__ == '__main__':
     args = argparse.ArgumentParser(description='Inference Script')
-    args.add_argument('-c', '--config', default="./config.json", type=str,
-                      help='config file path (default: ./config.json)')
-    args.add_argument('-r', '--resume', default=None, type=str,
-                      help='path to latest checkpoint (default: None)')
-    args.add_argument('-d', '--device', default=None, type=str,
-                      help='indices of GPUs to enable (default: all)')
+    args.add_argument('-c', '--config', default="./config.json", type=str, help='config file path (default: ./config.json)')
+    args.add_argument('-r', '--resume', default=None, type=str, help='path to latest checkpoint (default: None)')
+    args.add_argument('-d', '--device', default=None, type=str, help='indices of GPUs to enable (default: all)')
 
-    args.add_argument('-dst', '--districts', nargs='+', type=str,
-                      default=["abbottabad"], help='districts to consider')
-    args.add_argument('-y', '--years', nargs='+', type=int,
-                      default=[2016], help='years to consider')
+    args.add_argument('-dst', '--districts', nargs='+', type=str, default=["abbottabad"], help='districts to consider')
+    args.add_argument('-y', '--years', nargs='+', type=int, default=[2016], help='years to consider')
 
     config = ConfigParser.from_args(args)
     main(config, args)
