@@ -18,8 +18,7 @@ np.random.seed(123)
 
 
 class BaseTrainDataset(Dataset):
-    def __init__(self, data_list, data_map_path, stride, model_input_size, bands, num_classes, one_hot,
-                 mode='train', transforms=None):
+    def __init__(self, data_list, data_map_path, stride, model_input_size, bands, num_classes, one_hot, mode='train', transforms=None):
         super(Dataset, self).__init__()
         self.data_list = data_list
         self.stride = stride
@@ -27,18 +26,15 @@ class BaseTrainDataset(Dataset):
         self.bands = [x-1 for x in bands]
         self.num_classes = num_classes
         self.one_hot = one_hot
-
         self.transforms = transforms
         self.mode = mode
-
         self.all_images = []
         self.total_images = 0
 
         if os.path.exists(data_map_path):
             print('LOG: Saved data map found! Loading now...')
             with open(data_map_path, 'rb') as data_map:
-                self.data_list, self.all_images = pickle.load(
-                    data_map, encoding='latin1')
+                self.data_list, self.all_images = pickle.load(data_map, encoding='latin1')
                 self.total_images = len(self.all_images)
         else:
             print('LOG: No data map found! Generating now...')
@@ -64,18 +60,15 @@ class BaseTrainDataset(Dataset):
         (example_path, this_row, this_col) = self.all_images[k]
 
         with open(example_path, 'rb') as this_pickle:
-            (example_subset, label_subset) = pickle.load(
-                this_pickle, encoding='latin1')
+            (example_subset, label_subset) = pickle.load(this_pickle, encoding='latin1')
             example_subset = np.nan_to_num(example_subset)
             label_subset = np.nan_to_num(label_subset)
-        this_example_subset = example_subset[this_row:this_row +
-                                             self.model_input_size, this_col:this_col + self.model_input_size, :]
+        this_example_subset = example_subset[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size, :]
         # get more indices to add to the example, landsat-8
         this_example_subset = get_indices(this_example_subset)
         # at this point, we pick which bands to use
         this_example_subset = this_example_subset[:, :, self.bands]
-        this_label_subset = label_subset[this_row:this_row +
-                                         self.model_input_size, this_col:this_col + self.model_input_size]
+        this_label_subset = label_subset[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size]
         # Convert NULL-pixels to Non-Forest Class only during training
         this_label_subset = fix(this_label_subset).astype(np.uint8)
         if self.mode == 'train':
@@ -93,10 +86,8 @@ class BaseTrainDataset(Dataset):
                 this_example_subset = np.flipud(this_example_subset).copy()
                 this_label_subset = np.flipud(this_label_subset).copy()
         if self.one_hot:
-            this_label_subset = np.eye(self.num_classes)[
-                this_label_subset.astype(int)]
-        this_example_subset, this_label_subset = toTensor(
-            image=this_example_subset, label=this_label_subset, one_hot=self.one_hot)
+            this_label_subset = np.eye(self.num_classes)[this_label_subset.astype(int)]
+        this_example_subset, this_label_subset = toTensor(image=this_example_subset, label=this_label_subset, one_hot=self.one_hot)
         if self.transforms:
             this_example_subset = self.transforms(this_example_subset)
         return {'input': this_example_subset, 'label': this_label_subset, 'sample_identifier': (example_path, this_row, this_col)}
@@ -123,8 +114,7 @@ class BaseInferenceDataset(Dataset):
         os.mkdir(self.temp_dir)
         print('LOG: Generating data map now...')
         image_ds = gdal.Open(image_path, gdal.GA_ReadOnly)
-        all_raster_bands = [image_ds.GetRasterBand(
-            x+1).ReadAsArray() for x in range(image_ds.RasterCount)]
+        all_raster_bands = [image_ds.GetRasterBand(x+1).ReadAsArray() for x in range(image_ds.RasterCount)]
 
         # mask the image and adjust its size at this point
         test_image, self.adjustment_mask = mask_landsat8_image_using_rasterized_shapefile(rasterized_shapefiles_path=rasterized_shapefiles_path,
@@ -143,8 +133,7 @@ class BaseInferenceDataset(Dataset):
 
     def __getitem__(self, k):
         (this_row, this_col) = self.all_images[k]
-        this_example_subset = self.temp_test_image[this_row:this_row +
-                                                   self.model_input_size, this_col:this_col + self.model_input_size, :]
+        this_example_subset = self.temp_test_image[this_row:this_row + self.model_input_size, this_col:this_col + self.model_input_size, :]
         # get more indices to add to the example, landsat-8
         this_example_subset = get_indices(this_example_subset)
         # at this point, we pick which bands to forward based on command-line argument
@@ -152,8 +141,7 @@ class BaseInferenceDataset(Dataset):
         this_example_subset = toTensor(image=this_example_subset)
         x1, x2 = this_row, this_row + self.model_input_size
         y1, y2 = this_col, this_col + self.model_input_size
-        return {'coordinates': np.asarray([x1, x2, y1, y2]),
-                'input': this_example_subset}
+        return {'coordinates': np.asarray([x1, x2, y1, y2]), 'input': this_example_subset}
 
     def __len__(self):
         return self.total_images
