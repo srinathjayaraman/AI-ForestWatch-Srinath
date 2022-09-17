@@ -15,7 +15,11 @@ import data_loader.data_loaders as module_data
 import model.model as module_arch
 from parse_config import ConfigParser
 
-FOREST_LABEL, NON_FOREST_LABEL, NULL_LABEL = 2, 1, 0
+# FOREST_LABEL, NON_FOREST_LABEL, NULL_LABEL = 2, 1, 0
+# The old label numerical assignments are given above on line 18. My Ground Truth images only have 2 labels. 
+# So I am trying a new assignment to see if the inference still works. Forest and non-forest labels are now 1 and 0 respectively.
+
+FOREST_LABEL, NON_FOREST_LABEL = 1, 0
 
 
 def main(config, args):
@@ -69,25 +73,20 @@ def main(config, args):
     for district in all_districts:
         for year in years:
             logger.info("On District: {} @ Year: {}".format(district, year))
-            image_path = os.path.join(
-                data_path, 'landsat8_{}_region_{}.tif'.format(year, district))
+            image_path = os.path.join(data_path, 'landsat8_{}_region_{}.tif'.format(year, district))
             # setup data_loader
-            inference_loader = config.init_obj(
-                'inference_data_loader', module_data, image_path, district)
+            inference_loader = config.init_obj('inference_data_loader', module_data, image_path, district)
             adjustment_mask = inference_loader.dataset.adjustment_mask
             # we need to fill our new generated test image
-            generated_map = np.empty(
-                shape=inference_loader.dataset.get_image_size())
+            generated_map = np.empty(shape=inference_loader.dataset.get_image_size())
             for idx, data in enumerate(inference_loader):
-                coordinates, test_x = data['coordinates'].tolist(
-                ), data['input']
+                coordinates, test_x = data['coordinates'].tolist(), data['input']
                 test_x = test_x.to(device)
                 _, softmaxed = model.forward(test_x)
                 pred = torch.argmax(softmaxed, dim=1)
                 pred_numpy = pred.cpu().numpy().transpose(1, 2, 0)
                 if idx % 5 == 0:
-                    logger.info('On {} of {}'.format(
-                        idx, len(inference_loader)))
+                    logger.info('On {} of {}'.format(idx, len(inference_loader)))
                 for k in range(test_x.shape[0]):
                     x, x_, y, y_ = coordinates[k]
                     generated_map[x:x_, y:y_] = pred_numpy[:, :, k]
@@ -100,10 +99,8 @@ def main(config, args):
             forest_map_bband = np.zeros_like(generated_map)
             forest_map_gband[generated_map == FOREST_LABEL] = 255
             forest_map_rband[generated_map == NON_FOREST_LABEL] = 255
-            forest_map_for_visualization = np.dstack(
-                [forest_map_rband, forest_map_gband, forest_map_bband]).astype(np.uint8)
-            save_this_map_path = os.path.join(
-                config.inference_dir, '{}_{}_inferred_map.png'.format(district, year))
+            forest_map_for_visualization = np.dstack([forest_map_rband, forest_map_gband, forest_map_bband]).astype(np.uint8)
+            save_this_map_path = os.path.join(config.inference_dir, '{}_{}_inferred_map.png'.format(district, year))
             matimg.imsave(save_this_map_path, forest_map_for_visualization)
             logger.info('Saved: {} @ {}'.format(save_this_map_path,
                         forest_map_for_visualization.shape))
