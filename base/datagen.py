@@ -27,8 +27,7 @@ def fix(target_image):
     target_image -= 1
     return target_image
 
-def get_images_from_large_file(data_directory_path, label_directory_path, destination,
-                               bands, year, region, stride):
+def get_images_from_large_file(data_directory_path, label_directory_path, destination, bands, year, region, stride):
     image_path = os.path.join(data_directory_path, 'landsat8_{}_region_{}.tif'.format(year, region))
     label_path = os.path.join(label_directory_path,'{}_{}.tif'.format(region, year))
     if not os.path.exists(destination):
@@ -54,16 +53,13 @@ def get_images_from_large_file(data_directory_path, label_directory_path, destin
                 print("(LOG): Dropping NULL Pixel Sample")
                 continue
             # read the raster band by band for this subset
-            example_subset = np.nan_to_num(
-                all_raster_bands[0].ReadAsArray(j * stride, i * stride, stride, stride))
+            example_subset = np.nan_to_num(all_raster_bands[0].ReadAsArray(j * stride, i * stride, stride, stride))
             for band in all_raster_bands[1:]:
-                example_subset = np.dstack((example_subset, np.nan_to_num(
-                    band.ReadAsArray(j * stride, i * stride, stride, stride))))
+                example_subset = np.dstack((example_subset, np.nan_to_num(band.ReadAsArray(j * stride, i * stride, stride, stride))))
             # save this example/label pair of numpy arrays as a pickle file with an index
             this_example_save_path = os.path.join(destination, '{}_{}_{}.pkl'.format(region, year, count))
             with open(this_example_save_path, 'wb') as this_pickle:
-                pickle.dump((example_subset, label_subset),
-                            file=this_pickle, protocol=pickle.HIGHEST_PROTOCOL)
+                pickle.dump((example_subset, label_subset), file=this_pickle, protocol=pickle.HIGHEST_PROTOCOL)
                 print('log: Saved {} '.format(this_example_save_path))
                 print(i * stride, (i + 1) * stride, j * stride, (j + 1) * stride)
             count += 1
@@ -131,8 +127,7 @@ def get_indices(arr):
         "ndvi": (arr[:, :, 4] - arr[:, :, 3]) / (arr[:, :, 4] + arr[:, :, 3] + 1e-7),
         "evi": 2.5 * (arr[:, :, 4] - arr[:, :, 3]) / (arr[:, :, 4] + 6 * arr[:, :, 3] - 7.5 * arr[:, :, 1] + 1),
         "savi": 1.5 * (arr[:, :, 4] - arr[:, :, 3]) / (arr[:, :, 4] + arr[:, :, 3] + 0.5),
-        "msavi": 0.5 * (
-                2 * arr[:, :, 4] + 1 - np.sqrt((2 * arr[:, :, 4] + 1) ** 2 - 8 * (arr[:, :, 4] - arr[:, :, 3]))),
+        "msavi": 0.5 * (2 * arr[:, :, 4] + 1 - np.sqrt((2 * arr[:, :, 4] + 1) ** 2 - 8 * (arr[:, :, 4] - arr[:, :, 3]))),
         "ndmi": (arr[:, :, 4] - arr[:, :, 5]) / (arr[:, :, 4] + arr[:, :, 5] + 1e-7),
         "nbr": (arr[:, :, 4] - arr[:, :, 6]) / (arr[:, :, 4] + arr[:, :, 6] + 1e-7),
         "nbr2": (arr[:, :, 5] - arr[:, :, 6]) / (arr[:, :, 5] + arr[:, :, 6] + 1e-7),
