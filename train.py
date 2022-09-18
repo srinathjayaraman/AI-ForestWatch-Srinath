@@ -16,7 +16,6 @@ from parse_config import ConfigParser
 from trainer import Trainer
 from utils import prepare_device
 
-
 # fix random seeds for reproducibility
 SEED = 123
 torch.manual_seed(SEED)
@@ -59,18 +58,13 @@ def main(config):
                       valid_data_loader=val_data_loader,
                       test_data_loader=test_data_loader,
                       lr_scheduler=lr_scheduler)
-
     trainer.train()
-
 
 if __name__ == '__main__':
     args = argparse.ArgumentParser(description='U-Net Forest Segmentation Trainer')
-    args.add_argument('-c', '--config', default="./config.json", type=str,
-                      help='config file path (default: ./config.json)')
-    args.add_argument('-r', '--resume', default=None, type=str,
-                      help='path to latest checkpoint (default: None)')
-    args.add_argument('-d', '--device', default=None, type=str,
-                      help='indices of GPUs to enable (default: all)')
+    args.add_argument('-c', '--config', default="./config.json", type=str, help='config file path (default: ./config.json)')
+    args.add_argument('-r', '--resume', default=None, type=str, help='path to latest checkpoint (default: None)')
+    args.add_argument('-d', '--device', default=None, type=str, help='indices of GPUs to enable (default: all)')
 
     # custom cli options to modify configuration from default values given in json file.
     CustomArgs = collections.namedtuple('CustomArgs', 'flags type target')
