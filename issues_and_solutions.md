@@ -84,4 +84,6 @@ module load py-python-dateutil
 
 srun python inference.py > inference.log
 ```
+
+- While running `inference.py` for Netherlands, a couple of small changs must be made. The line `district = file.split('_')[-1][:-4]` has to be changed to `district = file.split('_')[-1][:-5]`. Notice -4 is changed to -5. The other change is in the file name itself. We have to search for `'landsat8_{}_region_{}.tiff'` instead of `'landsat8_{}_region_{}.tif'` like the original. The original input data used by the authors had a `.tif` extension, my satellite images have a `.tiff` extension, so the code has to be changed so the file is picked up correctly.
 I will keep updating this document as time goes on......
