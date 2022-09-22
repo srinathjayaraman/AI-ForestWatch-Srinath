@@ -45,4 +45,43 @@ Turns out that the `ImportError` was looking at `py-torch-1.10.0`, whereas the v
 ```
 python -m pip install --user torch==1.10.0+cu102 torchvision==0.11.0+cu102 torchaudio==0.10.0 -f https://download.pytorch.org/whl/torch_stable.html
 ```
+
+- Another issue I faced on the DelftBlue cluster was that while running `inference.py`, there was a clash between the versions of numpy being used. Error shown below:
+```
+RuntimeError: module compiled against API version 0xe but this version of numpy is 0xd
+Traceback (most recent call last):
+  File "/home/sjayaramannaga/.local/lib/python3.8/site-packages/osgeo/gdal_array.py", line 14, in swig_import_helper
+    return importlib.import_module(mname)
+  File "/apps/arch/2022r2/software/linux-rhel8-zen/gcc-8.5.0/python-3.8.12-bohr45d576273qfe7isfniyllfv4obuc/lib/python3.8/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1014, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 991, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 975, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 657, in _load_unlocked
+  File "<frozen importlib._bootstrap>", line 556, in module_from_spec
+  File "<frozen importlib._bootstrap_external>", line 1166, in create_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+ImportError: numpy.core.multiarray failed to import
+```
+The solution was to rely only on my pip installation and not on the modules pre-installed on the software stack. This what the batch script looked like to achieve this:
+```
+#!/bin/bash
+
+#SBATCH --job-name="inference"
+#SBATCH --partition=gpu
+#SBATCH --time=2:00:00
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=15
+#SBATCH --gpus-per-task=1
+#SBATCH --mem-per-cpu=2GB
+#SBATCH --account=education-eemcs-msc-cs
+
+module load 2022r2
+module load python
+module load openmpi
+module load py-pyparsing
+module load py-python-dateutil
+
+srun python inference.py > inference.log
+```
 I will keep updating this document as time goes on......
