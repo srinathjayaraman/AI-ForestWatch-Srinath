@@ -95,8 +95,7 @@ class UNet(BaseModel):
         self.softmax = nn.Softmax(dim=1)
         self.forward = self.topologies[topology]
         print('\n\n' + "#" * 100)
-        print("(LOG): The following Model Topology will be Utilized: {}".format(
-            self.forward.__name__))
+        print("(LOG): The following Model Topology will be Utilized: {}".format(self.forward.__name__))
         print("#" * 100 + '\n\n')
 
     def ENC_1_DEC_1(self, x_in):
