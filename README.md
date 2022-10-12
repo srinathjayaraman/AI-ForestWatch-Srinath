@@ -93,7 +93,7 @@ You can resume from a previously saved checkpoint by:
   --lr --learning_rate
   --bs --batch_size
   --epochs
-  --topology : should be one of the following (ENC_1_DEC_1, ENC_2_DEC_2, ENC_3_DEC_3, ENC_3_DEC_3)
+  --topology : should be one of the following (ENC_1_DEC_1, ENC_2_DEC_2, ENC_3_DEC_3, ENC_4_DEC_4)
   ```
 
 ## Inference
