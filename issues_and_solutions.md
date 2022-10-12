@@ -1,15 +1,21 @@
 ### This is a list of issues I've faced while running this code on the university PC's and TU Delft DHPC.
-- The university PC's have an nVIDIA GeForce GT 730 as their GPU. This is not supported by CUDA anymore, so PyTorch started to fail suddenly. The error was `RuntimeError: CUDA error: no kernel image is available for execution on the device`. The solution was found [in the thread for this issue raised on GitHub](https://github.com/pytorch/pytorch/issues/31285). I installed pytorch version 1.12 and then executed `python train.py`, which worked (thankfully). The command to do this is ` pip install --pre torch torchvision -f https://download.pytorch.org/whl/nightly/cu111/torch_nightly.html -U`.
+- The university PC's have an nVIDIA GeForce GT 730 as their GPU. This is not supported by CUDA anymore, so PyTorch started to fail suddenly. The error was `RuntimeError: CUDA error: no kernel image is available for execution on the device`. The solution was found [in the thread for this issue raised on GitHub](https://github.com/pytorch/pytorch/issues/31285). I installed pytorch version 1.12 and then executed `python train.py`, which worked (thankfully). The command to do this is: 
+```py 
+pip install --pre torch torchvision -f https://download.pytorch.org/whl/nightly/cu111/torch_nightly.html -U
+```
  
 - When resuming training from a checkpoint, include the **name** of the checkpoint file in the `resume` command. For example:
-`python train.py --resume C:\Users\sjayaramannaga\PycharmProjects\AI-ForestWatch-Srinath\saved\models\Landsat8_UNet\0802_181258\checkpoint-epoch18.pth` (no need to use single or double quotes for the path).
+```py
+python train.py --resume C:\Users\sjayaramannaga\PycharmProjects\AI-ForestWatch-Srinath\saved\models\Landsat8_UNet\0802_181258\checkpoint-epoch18.pth
+``` 
+There is no need to use single or double quotes while passing the path of the checkpoint.
 
-- In `base_dataset.py`, a temporary directory is being created, used to store 'temp_image.npy' and then deleted before the file for a region is processed. But the original research was done on a Linux system. On Windows 10, I continuously faced an error - `PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'temp_numpy_saves\\temp_image.npy`. Turns out that Windows does not like the `mmap_mode` command that was used when a `temp_image_path` is created using `os.path.join`, since it is created in read-only mode. Deleting the `mmap_mode` parameter fixed the issue.
+- In `base_dataset.py`, a temporary directory is being created, used to store 'temp_image.npy' and then deleted before the file for a region is processed. But the original research was done on a Linux system. On Windows 10, I kept getting this - `PermissionError: [WinError 32] The process cannot access the file because it is being used by another process: 'temp_numpy_saves\\temp_image.npy`. Turns out that Windows does not like the `mmap_mode` command that was used when a `temp_image_path` is created using `os.path.join`, since it is created in read-only mode. Deleting the `mmap_mode` parameter fixed the issue.
 
 - When I tried to run `inference.py` for a specific district/year combination (battagram/2016 for example), the argument would never get passed to `inference.py`. This was because in the `if` condition that was checking to see if arguments were being passed through the command line, the district name and year were coded as `config.districts` and `config.years`. It should be `[args.districts]` and `[args.years]`.
 
 - When I started using the Delft High Performance Compute Cluster (aka DHPC), I ran into a very weird `ImportError`:
-```
+```py
 Traceback (most recent call last):
   File "train.py", line 14, in <module>
     import model.model as module_arch
@@ -28,7 +34,7 @@ Traceback (most recent call last):
 ImportError: cannot import name 'QuantStub' from 'torch.ao.quantization' (/apps/arch/2022r2/software/linux-rhel8-skylake_avx512/gcc-8.5.0/py-torch-1.10.0-uv5yokclab46j6l2ptyqrjwelp43xfoj/lib/python3.8/site-packages/torch/ao/quantization/__init__.py)
 ```
 These are the details of the pytorch module installed:
-```
+```py
 [sjayaramannaga@login01 AI-ForestWatch-Srinath]$ python -m pip show torch
 Name: torch
 Version: 1.12.1
@@ -42,12 +48,12 @@ Requires: typing-extensions
 Required-by: torchvision
 ```
 Turns out that the `ImportError` was looking at `py-torch-1.10.0`, whereas the version installed was `py-torch-1.12.1`. Installed a specific version using the following command, and that fixed the issue:
-```
+```py
 python -m pip install --user torch==1.10.0+cu102 torchvision==0.11.0+cu102 torchaudio==0.10.0 -f https://download.pytorch.org/whl/torch_stable.html
 ```
 
 - Another issue I faced on the DelftBlue cluster was that while running `inference.py`, there was a clash between the versions of numpy being used. Error shown below:
-```
+```py
 RuntimeError: module compiled against API version 0xe but this version of numpy is 0xd
 Traceback (most recent call last):
   File "/home/sjayaramannaga/.local/lib/python3.8/site-packages/osgeo/gdal_array.py", line 14, in swig_import_helper
@@ -63,8 +69,8 @@ Traceback (most recent call last):
   File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
 ImportError: numpy.core.multiarray failed to import
 ```
-The solution was to rely only on my pip installation and not on the modules pre-installed on the software stack. This what the batch script looked like to achieve this:
-```
+The solution was to rely only on my pip installation and not on the modules pre-installed on the software stack. This what the batch script to do that looked like:
+```console
 #!/bin/bash
 
 #SBATCH --job-name="inference"
@@ -86,4 +92,8 @@ srun python inference.py > inference.log
 ```
 
 - While running `inference.py` for Netherlands, a couple of small changs must be made. The line `district = file.split('_')[-1][:-4]` has to be changed to `district = file.split('_')[-1][:-5]`. Notice -4 is changed to -5. The other change is in the file name itself. We have to search for `'landsat8_{}_region_{}.tiff'` instead of `'landsat8_{}_region_{}.tif'` like the original. The original input data used by the authors had a `.tif` extension, my satellite images have a `.tiff` extension, so the code has to be changed so the file is picked up correctly.
+
+- The pre-trained model provided has been trained on 18 bands, so in order to train for the other input configurations, change the `input_channels` value in `config.json` accordingly.
+
+
 I will keep updating this document as time goes on......
