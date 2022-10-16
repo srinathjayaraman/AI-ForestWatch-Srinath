@@ -95,5 +95,7 @@ srun python inference.py > inference.log
 
 - The pre-trained model provided has been trained on 18 bands, so in order to train for the other input configurations, change the `input_channels` value in `config.json` accordingly.
 
+- To pass arguments during training or inference on DHPC, follow the instructions on [this page](https://wiki.hpc.rug.nl/peregrine/advanced_job_management/passing_parameters_to_a_job_script)
+
 
 I will keep updating this document as time goes on......
