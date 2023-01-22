@@ -6,17 +6,20 @@
 
 import os
 import pickle
+
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from osgeo import gdal
 from PIL import Image
 
+
 def adaptive_resize(array, new_shape):
     # reshape the labels to the size of the image
     single_band = Image.fromarray(array)
     single_band_resized = single_band.resize(new_shape, Image.NEAREST)
     return np.asarray(single_band_resized)
+
 
 def fix(target_image):
     # we fix the label by
@@ -27,9 +30,11 @@ def fix(target_image):
     target_image -= 1
     return target_image
 
-def get_images_from_large_file(data_directory_path, label_directory_path, destination, bands, year, region, stride):
+
+def get_images_from_large_file(data_directory_path, label_directory_path, destination,
+                               bands, year, region, stride):
     image_path = os.path.join(data_directory_path, 'landsat8_{}_region_{}.tif'.format(year, region))
-    label_path = os.path.join(label_directory_path,'{}_{}.tif'.format(region, year))
+    label_path = os.path.join(label_directory_path, '{}_{}.tif'.format(region, year))
     if not os.path.exists(destination):
         print('Log: Making parent directory: {}'.format(destination))
         os.mkdir(destination)
@@ -64,23 +69,51 @@ def get_images_from_large_file(data_directory_path, label_directory_path, destin
                 print(i * stride, (i + 1) * stride, j * stride, (j + 1) * stride)
             count += 1
 
+# def mask_landsat8_image_using_rasterized_shapefile(rasterized_shapefiles_path, district, this_landsat8_bands_list):
+#     this_shapefile_path = os.path.join(rasterized_shapefiles_path, "{}_shapefile.tif".format(district))
+#     ds = gdal.Open(this_shapefile_path)
+#     assert ds.RasterCount == 1
+#     shapefile_mask = np.array(ds.GetRasterBand(1).ReadAsArray(), dtype=np.uint8)
+#     clipped_full_spectrum = list()
+#     for idx, this_band in enumerate(this_landsat8_bands_list):
+#         print("{}: Band-{} Size: {}".format(district, idx, this_band.shape))
+#         clipped_full_spectrum.append(np.multiply(this_band, shapefile_mask))
+#     x_prev, y_prev = clipped_full_spectrum[0].shape
+#     x_fixed, y_fixed = int(128 * np.ceil(x_prev / 128)), int(128 * np.ceil(y_prev / 128))
+#     diff_x, diff_y = x_fixed - x_prev, y_fixed - y_prev
+#     diff_x_before, diff_y_before = diff_x // 2, diff_y // 2
+#     clipped_full_spectrum_resized = [np.pad(x, [(diff_x_before, diff_x - diff_x_before),
+#                                     (diff_y_before, diff_y - diff_y_before)], mode='constant')
+#         for x in clipped_full_spectrum]
+#     print("{}: Generated Image Size: {}".format(district, clipped_full_spectrum_resized[0].shape,
+#     len(clipped_full_spectrum_resized)))
+#     return clipped_full_spectrum_resized
+
+# OLD CODE - trying the old code from
+# https://github.com/dll-ncai/AI-ForestWatch/blob/bccb8322a494c73f36bbb53e9d69bb91df1b4b04/old%20code/inference.py#L42-L62
+
 def mask_landsat8_image_using_rasterized_shapefile(rasterized_shapefiles_path, district, this_landsat8_bands_list):
-    this_shapefile_path = os.path.join(rasterized_shapefiles_path, "{}_shapefile.tif".format(district))
+    this_shapefile_path = os.path.join(rasterized_shapefiles_path, "{}_shapefile.tiff".format(district))
     ds = gdal.Open(this_shapefile_path)
     assert ds.RasterCount == 1
     shapefile_mask = np.array(ds.GetRasterBand(1).ReadAsArray(), dtype=np.uint8)
+    x_size, y_size = ds.RasterXSize, ds.RasterYSize # this is the x and y size of the shapefile
     clipped_full_spectrum = list()
     for idx, this_band in enumerate(this_landsat8_bands_list):
-        print("{}: Band-{} Size: {}".format(district, idx, this_band.shape))
+        this_band = adaptive_resize(this_band, (x_size, y_size))
         clipped_full_spectrum.append(np.multiply(this_band, shapefile_mask))
+    #print("clipped_full_spectrum shape is: ", clipped_full_spectrum[0].shape, "\n") # srinath
     x_prev, y_prev = clipped_full_spectrum[0].shape
     x_fixed, y_fixed = int(128 * np.ceil(x_prev / 128)), int(128 * np.ceil(y_prev / 128))
     diff_x, diff_y = x_fixed - x_prev, y_fixed - y_prev
-    diff_x_before, diff_y_before = diff_x // 2, diff_y // 2
-    clipped_full_spectrum_resized = [np.pad(x, [(diff_x_before, diff_x - diff_x_before), (diff_y_before, diff_y - diff_y_before)], mode='constant')
+    diff_x_before, diff_y_before = diff_x//2, diff_y//2
+    clipped_full_spectrum_resized = [np.pad(x, [(diff_x_before, diff_x-diff_x_before), (diff_y_before, diff_y-diff_y_before)], mode='constant')
                                      for x in clipped_full_spectrum]
-    print("{}: Generated Image Size: {}".format(district, clipped_full_spectrum_resized[0].shape, len(clipped_full_spectrum_resized)))
-    return clipped_full_spectrum_resized
+    clipped_shapefile_mask_resized = np.pad(shapefile_mask, [(diff_x_before, diff_x-diff_x_before), (diff_y_before, diff_y-diff_y_before)], mode='constant')
+    clipped_full_spectrum_stacked_image = np.dstack(clipped_full_spectrum_resized)
+    print("{}: Generated Image Size: {}".format(district, clipped_full_spectrum_stacked_image.shape))
+    return clipped_full_spectrum_stacked_image, clipped_shapefile_mask_resized
+
 
 def check_generated_dataset(path_to_dataset):
     for count in range(266):
@@ -95,6 +128,7 @@ def check_generated_dataset(path_to_dataset):
         plt.imshow(label_subset)
         plt.show()
 
+
 def check_generated_fnf_datapickle(example_path):
     with open(example_path, 'rb') as this_pickle:
         (example_subset, label_subset) = pickle.load(this_pickle, encoding='latin1')
@@ -108,19 +142,31 @@ def check_generated_fnf_datapickle(example_path):
     plt.imshow(that)
     plt.show()
 
-def toTensor(image, label, one_hot=True):
-    '''will convert image and label from numpy to torch tensor'''
+# def toTensor(image, label, one_hot=True):
+#     '''will convert image and label from numpy to torch tensor'''
+#     # swap color axis because
+#     # numpy image: H x W x C
+#     # torch image: C X H X W
+#     image = image.transpose((2, 0, 1))
+#     img_tensor = torch.from_numpy(image).float()
+#     if one_hot:
+#         label = label.transpose((2, 0, 1))
+#         label_tensor = torch.from_numpy(label).float()
+#     else:
+#         label_tensor = torch.from_numpy(label).long()
+#     return img_tensor, label_tensor
+
+# Again using Annus's old code from (for inference only for now):
+# https://github.com/dll-ncai/AI-ForestWatch/blob/bccb8322a494c73f36bbb53e9d69bb91df1b4b04/old%20code/inference.py#L64-L71
+
+def toTensor(**kwargs):
+    image = kwargs['image']
+    'will convert image from numpy to torch tensor'
     # swap color axis because
     # numpy image: H x W x C
     # torch image: C X H X W
     image = image.transpose((2, 0, 1))
-    img_tensor = torch.from_numpy(image).float()
-    if one_hot:
-        label = label.transpose((2, 0, 1))
-        label_tensor = torch.from_numpy(label).float()
-    else:
-        label_tensor = torch.from_numpy(label).long()
-    return img_tensor, label_tensor
+    return torch.from_numpy(image).float()
 
 def get_indices(arr):
     bands = {
@@ -142,16 +188,15 @@ def main():
     data_directory_path = 'E:\Masters\IN5000 - Final Project\AI-ForestWatch-Data\inference\images'
     label_directory_path = 'E:\Masters\IN5000 - Final Project\AI-ForestWatch-Data\GroundTruth'
     destination = 'E:\Masters\IN5000 - Final Project\AI-ForestWatch-Data\datagen_destination'
-    
+
     # generate pickle files to train from
-    
-    all_districts = ["abbottabad", "battagram", "buner", "chitral", "hangu", "haripur", "karak", "kohat", "kohistan",
-                     "lower_dir", "malakand", "mansehra", "nowshehra", "shangla", "swat", "tor_ghar", "upper_dir"]
-    
+    all_districts = ["abbottabad", "battagram", "buner", "hangu", "haripur", "karak", "kohat", "kohistan",
+                     "lowerdir", "malakand", "mansehra", "nowshehra", "shangla", "swat", "torghar"]
+
     # number of images generated depends on value of stride
     for district in all_districts:
-        get_images_from_large_file(data_directory_path, label_directory_path, destination,
-                                   bands=range(1, 12), year=2015, region=district, stride=256)
+        get_images_from_large_file(data_directory_path, label_directory_path, destination, bands=range(1, 12),
+                                   year=2015, region=district, stride=256)
 
 
 if __name__ == "__main__":

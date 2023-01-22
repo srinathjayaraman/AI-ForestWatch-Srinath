@@ -16,9 +16,12 @@ class BaseDataLoader(DataLoader):
     def __init__(self, dataset, batch_size, shuffle, num_workers, train_split=0.0, collate_fn=default_collate):
         self.train_split = train_split
         self.shuffle = shuffle
+
         self.batch_idx = 0
         self.n_samples = len(dataset)
+
         self.sampler, self.valid_sampler, self.test_sampler = self._split_sampler(self.train_split)
+
         self.init_kwargs = {
             'dataset': dataset,
             'batch_size': batch_size,

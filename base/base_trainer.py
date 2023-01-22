@@ -15,10 +15,12 @@ class BaseTrainer:
     def __init__(self, model, criterion, metric_ftns, optimizer, config):
         self.config = config
         self.logger = config.get_logger('trainer', config['trainer']['verbosity'])
+
         self.model = model
         self.criterion = criterion
         self.metric_ftns = metric_ftns
         self.optimizer = optimizer
+
         cfg_trainer = config['trainer']
         self.epochs = cfg_trainer['epochs']
         self.save_period = cfg_trainer['save_period']
@@ -31,6 +33,7 @@ class BaseTrainer:
         else:
             self.mnt_mode, self.mnt_metric = self.monitor.split()
             assert self.mnt_mode in ['min', 'max']
+
             self.mnt_best = inf if self.mnt_mode == 'min' else -inf
             self.early_stop = cfg_trainer.get('early_stop', inf)
             if self.early_stop <= 0:
@@ -51,6 +54,7 @@ class BaseTrainer:
     def _train_epoch(self, epoch):
         """
         Training logic for an epoch
+
         :param epoch: Current epoch number
         """
         raise NotImplementedError
@@ -102,6 +106,7 @@ class BaseTrainer:
     def _save_checkpoint(self, epoch, save_best=False):
         """
         Saving checkpoints
+
         :param epoch: current epoch number
         :param log: logging information of the epoch
         :param save_best: if True, rename the saved checkpoint to 'model_best.pth'
@@ -126,6 +131,7 @@ class BaseTrainer:
     def _resume_checkpoint(self, resume_path):
         """
         Resume from saved checkpoints
+
         :param resume_path: Checkpoint path to be resumed
         """
         resume_path = str(resume_path)
