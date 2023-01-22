@@ -16,6 +16,7 @@ from parse_config import ConfigParser
 from trainer import Trainer
 from utils import prepare_device
 
+
 # fix random seeds for reproducibility
 SEED = 123
 torch.manual_seed(SEED)
@@ -58,7 +59,9 @@ def main(config):
                       valid_data_loader=val_data_loader,
                       test_data_loader=test_data_loader,
                       lr_scheduler=lr_scheduler)
+
     trainer.train()
+
 
 if __name__ == '__main__':
     args = argparse.ArgumentParser(description='U-Net Forest Segmentation Trainer')

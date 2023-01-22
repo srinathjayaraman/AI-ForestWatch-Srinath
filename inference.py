@@ -15,11 +15,7 @@ import data_loader.data_loaders as module_data
 import model.model as module_arch
 from parse_config import ConfigParser
 
-# FOREST_LABEL, NON_FOREST_LABEL, NULL_LABEL = 2, 1, 0
-# The old label numerical assignments are given above on line 18. My Ground Truth images only have 2 labels. 
-# So I am trying a new assignment to see if the inference still works. Forest and non-forest labels are now 1 and 0 respectively.
-
-FOREST_LABEL, NON_FOREST_LABEL = 1, 0
+FOREST_LABEL, NON_FOREST_LABEL, NULL_LABEL = 2, 1, 0
 
 
 def main(config, args):
@@ -49,30 +45,32 @@ def main(config, args):
     # set districts and years
     data_path = config['inference_data_loader']['data_path']
     if hasattr(args, "districts"):
-        all_districts = config.districts
+        all_districts = [args.districts]
     else:
         # get all districts in directory
         all_districts = set()
         files = os.listdir(data_path)
         for file in files:
-            district = file.split('_')[-1][:-4]
+            district = file.split('_')[-1][:-4] # If file name has TIF extension, we need to ignore last 4 characters
+            #district = file.split('_')[-1][:-5] # If file name has TIFF extension, we need to ignore last 5 characters
             all_districts.add(district)
         all_districts = list(all_districts)
     if hasattr(args, "years"):
-        years = config.years
+        years = [args.years]
     else:
         # get all years in directory
         years = set()
         files = os.listdir(data_path)
         for file in files:
-            year = int(file.split('_')[1])
+            year = int(file.split('_')[2])  # srinath - I made this change to ensure that the year is picked up correctly since the file name now has 28992 in it
             years.add(year)
         years = list(years)
 
     for district in all_districts:
         for year in years:
+            print("the years being processed are: ", years) # srinath
             logger.info("On District: {} @ Year: {}".format(district, year))
-            image_path = os.path.join(data_path, 'landsat8_{}_region_{}.tif'.format(year, district))
+            image_path = os.path.join(data_path, 'landsat8_28992_{}_{}.tif'.format(year, district))
             # setup data_loader
             inference_loader = config.init_obj('inference_data_loader', module_data, image_path, district)
             adjustment_mask = inference_loader.dataset.adjustment_mask
@@ -81,14 +79,28 @@ def main(config, args):
             for idx, data in enumerate(inference_loader):
                 coordinates, test_x = data['coordinates'].tolist(), data['input']
                 test_x = test_x.to(device)
+                # print("max: ", torch.max(data['input']), " min: ", torch.min(data['input'])) # srinath
                 _, softmaxed = model.forward(test_x)
                 pred = torch.argmax(softmaxed, dim=1)
                 pred_numpy = pred.cpu().numpy().transpose(1, 2, 0)
                 if idx % 5 == 0:
                     logger.info('On {} of {}'.format(idx, len(inference_loader)))
+                # zeros = 0
+                # ones = 0
+                # twos = 0
                 for k in range(test_x.shape[0]):
                     x, x_, y, y_ = coordinates[k]
                     generated_map[x:x_, y:y_] = pred_numpy[:, :, k]
+                #     # srinath start
+                #     print("show patch num: ", k)
+                #     patch = pred_numpy[:, :, k]
+                #     zeros += np.sum(patch == 0)
+                #     ones += np.sum(patch == 1)
+                #     twos += np.sum(patch == 2)
+                # print("number of zeros BEFORE postprocessing: ", zeros, "\n")
+                # print("number of ones BEFORE postprocessing: ", ones, "\n")
+                # print("number of twos BEFORE postprocessing: ", twos, "\n")
+                #    # srinath end
             # adjust the inferred map
             generated_map += 1  # to make forest pixels: 2, non-forest pixels: 1, null pixels: 0
             generated_map = np.multiply(generated_map, adjustment_mask)
@@ -101,7 +113,7 @@ def main(config, args):
             forest_map_for_visualization = np.dstack([forest_map_rband, forest_map_gband, forest_map_bband]).astype(np.uint8)
             save_this_map_path = os.path.join(config.inference_dir, '{}_{}_inferred_map.png'.format(district, year))
             matimg.imsave(save_this_map_path, forest_map_for_visualization)
-            logger.info('Saved: {} @ {}'.format(save_this_map_path,forest_map_for_visualization.shape))
+            logger.info('Saved: {} @ {}'.format(save_this_map_path, forest_map_for_visualization.shape))
 
 
 if __name__ == '__main__':
@@ -109,9 +121,8 @@ if __name__ == '__main__':
     args.add_argument('-c', '--config', default="./config.json", type=str, help='config file path (default: ./config.json)')
     args.add_argument('-r', '--resume', default=None, type=str, help='path to latest checkpoint (default: None)')
     args.add_argument('-d', '--device', default=None, type=str, help='indices of GPUs to enable (default: all)')
-
-    args.add_argument('-dst', '--districts', nargs='+', type=str, default=["abbottabad"], help='districts to consider')
-    args.add_argument('-y', '--years', nargs='+', type=int, default=[2016], help='years to consider')
+    args.add_argument('-dst', '--districts', nargs='+', type=str, default="abbottabad", help='districts to consider')
+    args.add_argument('-y', '--years', nargs='+', type=int, default=2016, help='years to consider')
 
     config = ConfigParser.from_args(args)
     main(config, args)

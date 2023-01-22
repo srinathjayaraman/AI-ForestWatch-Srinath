@@ -64,7 +64,8 @@ First install necessary requirements using
 Edit `config.json` to replace paths as required.
 
 ## Data Collection
-First you need to create the necessary pickle files used for either training or inference. These can be generated using data from Landsat8. We used images from year 2015 for training/validation and from years 2014, 2016-2020 for inference. If you want to use your own files, then you can use Google Earth Engine. 
+First you need to create the necessary pickle files used for either training or inference. These can be generated using data from Landsat8. We used images from 2015 for training and testing. Images from 2014, and 2016-2020 were used to test the real world performance of the UNet. If you want to use your own files, then you can use Google Earth Engine. 
+
 Both training and testing data may be found in [this drive folder](https://drive.google.com/drive/folders/1-YQrkbG--F1MeYkW6izYWhP19K1QWijN?usp=sharing). Create `data/landsat8` folder and store the data there .
 
 Once you obtain the necessary `.tiff` files, you can use [`get_images_from_large_file`](./base/datagen.py#L37) to generate the pickle dataset. Create a folder called `data/pickled_dataset/` and store the pickled files for each region/year there. For now, it's assumed that you only downloaded train data. If you want to store train and test pickle files separately, then you need to create two folders `data/pickled_dataset/train` and `data/pickled_dataset/test`. 
@@ -93,7 +94,7 @@ You can resume from a previously saved checkpoint by:
   --lr --learning_rate
   --bs --batch_size
   --epochs
-  --topology : should be one of the following (ENC_1_DEC_1, ENC_2_DEC_2, ENC_3_DEC_3, ENC_4_DEC_4)
+  --topology : should be one of the following (ENC_1_DEC_1, ENC_2_DEC_2, ENC_3_DEC_3, ENC_3_DEC_3)
   ```
 
 ## Inference
@@ -107,7 +108,7 @@ We have provided our own datasets for containing this file in the provided Googl
 
 You may use our pretrained model for inference or pass another checkpoint. By default, if you run `python inference.py`, then inference will be performed for all files in `data_path` directory. If you wish to perform inference for specific districts and/or years, an example command is as follows:
 
-`python inference.py -dst abbottabad battagram -y 2015 2016`  
+`python inference.py -d abbotabad battagram -y 2015 2016`  
 
 The output of this script will be saved in the most recent experiment folder inside `./saved/inference/`
 

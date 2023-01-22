@@ -6,29 +6,29 @@
         "type": "UNet",
         "args": {
             "topology": "ENC_4_DEC_4",
-            "input_channels": 18,
+            "input_channels": 11,
             "num_classes": 2
         }
     },
     "train_data_loader": {
         "type": "Landsat8TrainDataLoader",
         "args": {
-            "data_dir": "E:\\Masters\\IN5000 - Final Project\\AI-ForestWatch-Data\\Netherlands data\\train\\training_2015_pickled_data",
-            "data_split_lists_path": "E:\\Masters\\IN5000 - Final Project\\AI-ForestWatch-Data\\Netherlands data\\train\\temp_split",
+            "data_dir": "E:\\Masters\\IN5000 - Final Project\\AI-ForestWatch-Data\\train\\training_2015_pickled_data",
+            "data_split_lists_path": "E:\\Masters\\IN5000 - Final Project\\AI-ForestWatch-Data\\train\\temp_split",
             "batch_size": 16,
             "model_input_size": 128,
-            "bands": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+            "bands": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
             "num_classes": 2,
             "one_hot": true
         }
     },
     "inference_data_loader": {
         "type": "Landsat8InferenceDataLoader",
-        "data_path": "E:\\Masters\\IN5000 - Final Project\\AI-ForestWatch-Data\\inference\\images",
+        "data_path": "E:\\Masters\\IN5000 - Final Project\\AI-ForestWatch-Data\\Netherlands data\\inference\\images\\District wise images\\all images",
         "destination": "saved/inference",
         "args": {
-            "rasterized_shapefiles_path": "E:\\Masters\\IN5000 - Final Project\\AI-ForestWatch-Data\\inference\\shapefiles",
-            "bands": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
+            "rasterized_shapefiles_path": "E:\\Masters\\IN5000 - Final Project\\AI-ForestWatch-Data\\Netherlands data\\inference\\shapefiles",
+            "bands": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
             "model_input_size": 128,
             "num_classes": 2,
             "batch_size": 32
@@ -54,7 +54,7 @@
     "trainer": {
         "epochs": 20,
         "save_dir": "saved/",
-        "pretrained_model": "E:\\Masters\\IN5000 - Final Project\\AI-ForestWatch-Data\\PretrainedModel\\model_69_topologyENC_4_DEC_4_lr1e-06_bands18.pt",
+        "pretrained_model": "E:\\Masters\\IN5000 - Final Project\\AI-ForestWatch-Data\\PretrainedModel\\model_50_topologyENC_4_DEC_4_lr1e-06_bands11.pt",
         "save_period": 1,
         "verbosity": 2,
         "monitor": "off",
