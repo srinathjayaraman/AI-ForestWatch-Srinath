@@ -6,7 +6,9 @@
 
 import os
 import random
+
 from base import BaseDataLoader, BaseInferenceDataset, BaseTrainDataset
+
 random.seed(123)
 
 
@@ -15,19 +17,22 @@ class Landsat8TrainDataLoader(BaseDataLoader):
     Dataloader to train, validate, and test on Landsat8 generated pickle data
     """
 
-    def __init__(self, data_dir, data_split_lists_path, batch_size, model_input_size, bands, num_classes, one_hot, 
+    def __init__(self, data_dir, data_split_lists_path, batch_size, model_input_size, bands, num_classes, one_hot,
                  train_split=0.8, mode='train', num_workers=4, transforms=None):
 
-        assert mode in ('train', 'val', 'test'), "Invalid value for train/val/test mode"
+        assert mode in (
+            'train', 'val', 'test'), "Invalid value for train/val/test mode"
 
         # generated pickle data path
         self.data_dir = data_dir
 
         if not os.path.exists(data_split_lists_path):
-            print('LOG: No saved data found. Making new data directory {}'.format(data_split_lists_path))
+            print('LOG: No saved data found. Making new data directory {}'.format(
+                data_split_lists_path))
             os.mkdir(data_split_lists_path)
 
-        full_examples_list = [os.path.join(self.data_dir, x) for x in os.listdir(self.data_dir)]
+        full_examples_list = [os.path.join(
+            self.data_dir, x) for x in os.listdir(self.data_dir)]
         random.shuffle(full_examples_list)
         train_split = int(train_split*len(full_examples_list))
 
@@ -60,12 +65,12 @@ class Landsat8InferenceDataLoader(BaseDataLoader):
     Dataloader to infer Landsat8 generated pickle data
     """
 
-    def __init__(self, image_path, district,
-                 rasterized_shapefiles_path, bands, model_input_size, num_classes, batch_size,
-                 num_workers=2, transforms=None):
+    def __init__(self, image_path, district, rasterized_shapefiles_path, bands, model_input_size, num_classes,
+                 batch_size, num_workers=2, transforms=None):
         # create dataset class instances
         self.dataset = BaseInferenceDataset(rasterized_shapefiles_path=rasterized_shapefiles_path,
                                             image_path=image_path,
+                                            stride=model_input_size, # https://github.com/dll-ncai/AI-ForestWatch/issues/5
                                             bands=bands,
                                             model_input_size=model_input_size,
                                             district=district,
