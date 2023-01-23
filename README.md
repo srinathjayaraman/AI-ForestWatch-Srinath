@@ -104,7 +104,7 @@ For inference, two data directories are required. These include:
     Landsat8) are required
  2. Shapefiles for these images
 
-We have provided our own datasets for containing this file in the provided Google Drive folder. We have specified the paths to these datasets in the [configuration file](./config.json#28).  You can change these to point to your own dataset.
+We have provided our own datasets for containing this file in the provided Google Drive folder. We have specified the paths to these datasets in the [configuration file](./config.json#28).  You can change these to point to your own dataset. The shapefiles for all 12 provinces in The Netherlands [can be found here.](https://github.com/srinathjayaraman/AI-ForestWatch-Srinath/tree/main/Netherlands%20shapefiles)
 
 You may use our pretrained model for inference or pass another checkpoint. By default, if you run `python inference.py`, then inference will be performed for all files in `data_path` directory. If you wish to perform inference for specific districts and/or years, an example command is as follows:
 
