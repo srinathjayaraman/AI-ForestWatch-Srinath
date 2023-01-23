@@ -54,7 +54,7 @@
     "trainer": {
         "epochs": 20,
         "save_dir": "saved/",
-        "pretrained_model": "E:\\Masters\\IN5000 - Final Project\\AI-ForestWatch-Data\\PretrainedModel\\model_50_topologyENC_4_DEC_4_lr1e-06_bands11.pt",
+        "pretrained_model": "E:\\Masters\\IN5000 - Final Project\\AI-ForestWatch-Data\\PretrainedModel\\model_69_topologyENC_4_DEC_4_lr1e-06_bands18",
         "save_period": 1,
         "verbosity": 2,
         "monitor": "off",
